@@ -2,38 +2,20 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import component.MovieItem
 import webclient.MovieWebClient
 import model.Movie
 
 @Composable
 @Preview
-fun App() {
+fun App(movies: List<Movie>) {
     MaterialTheme(
         colors = darkColors()
     ) {
         Surface {
-            val movies = listOf(
-                Movie(
-                    title = "The Shawshank Redemption",
-                    image = "https://m.media-amazon.com/images/M/MV5BMDFkYTc0MGEtZmNhMC00ZDIzLWFmNTEtODM1ZmRlYWMwMWFmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX674_.jpg",
-                    rating = 8.7,
-                    year = 1994
-                ),
-                Movie(
-                    title = "The Shawshank Redemption",
-                    image = "https://m.media-amazon.com/images/M/MV5BMDFkYTc0MGEtZmNhMC00ZDIzLWFmNTEtODM1ZmRlYWMwMWFmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX674_.jpg",
-                    rating = 8.7,
-                    year = 1994
-                ),
-                Movie(
-                    title = "The Shawshank Redemption",
-                    image = "https://m.media-amazon.com/images/M/MV5BMDFkYTc0MGEtZmNhMC00ZDIzLWFmNTEtODM1ZmRlYWMwMWFmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX674_.jpg",
-                    rating = 8.7,
-                    year = 1994
-                ),
-            )
             LazyColumn {
                 items(movies) { movie ->
                     MovieItem(movie = movie)
@@ -43,15 +25,18 @@ fun App() {
     }
 }
 
-//fun main() = application {
-//    Window(
-//        onCloseRequest = ::exitApplication,
-//        title = "IMDB",
-//    ) {
-//        App()
-//    }
-//}
-
-fun main() {
-    MovieWebClient().findTop250Movies()
+fun main() = application {
+    val client = MovieWebClient()
+    var movies: List<Movie> by remember {
+        mutableStateOf(emptyList())
+    }
+    client.findTop250Movies {
+        movies = it
+    }
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "IMDB",
+    ) {
+        App(movies)
+    }
 }
