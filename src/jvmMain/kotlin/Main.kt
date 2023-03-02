@@ -1,42 +1,79 @@
+import UI.components.CenteredMessage
+import UI.screens.MoviesListScreen
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import component.MovieItem
 import webclient.MovieWebClient
-import model.Movie
+import webclient.Status
 
 @Composable
 @Preview
-fun App(movies: List<Movie>) {
+fun App(content: @Composable () -> Unit) {
     MaterialTheme(
         colors = darkColors()
     ) {
         Surface {
-            LazyColumn {
-                items(movies) { movie ->
-                    MovieItem(movie = movie)
-                }
+            Box(modifier = Modifier.fillMaxSize()) {
+                content()
             }
         }
     }
 }
 
+
 fun main() = application {
     val client = MovieWebClient()
-    var movies: List<Movie> by remember {
-        mutableStateOf(emptyList())
-    }
-    client.findTop250Movies {
-        movies = it
-    }
+    val loadingMovieStatus = client
+        .findTop250Movies()
+        .collectAsState(Status.Loading)
+        .value
     Window(
         onCloseRequest = ::exitApplication,
-        title = "IMDB",
+        title = "IMDB"
     ) {
-        App(movies)
+        App {
+            when (loadingMovieStatus) {
+                is Status.Success -> {
+                    val movies = loadingMovieStatus.data
+                    if (movies.isNotEmpty()) {
+                        MoviesListScreen(movies)
+                    } else {
+                        CenteredMessage("Sem filmes")
+                    }
+                }
+                is Status.Error -> {
+                    val error = loadingMovieStatus.exception
+                    var showSnackBar by remember {
+                        mutableStateOf(true)
+                    }
+                    if (showSnackBar) {
+                        Snackbar(
+                            modifier = Modifier
+                                .padding(8.dp),
+                            action = {
+                                Button(onClick = {
+                                    showSnackBar = false
+                                }) {
+                                    Text("Close")
+                                }
+                            },
+                        ) {
+                            Text("Falha ao buscar filmes")
+                            error.printStackTrace()
+                        }
+                    }
+                }
+                Status.Loading -> {
+                    CenteredMessage("Carregando filmes...")
+                }
+            }
+        }
     }
 }
