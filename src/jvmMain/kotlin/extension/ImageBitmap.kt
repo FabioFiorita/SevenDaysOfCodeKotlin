@@ -2,6 +2,7 @@ package extension
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
+import retrofit2.Retrofit
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
